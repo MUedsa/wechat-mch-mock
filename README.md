@@ -1,6 +1,7 @@
 # wechat-mch-mock
 微信支付API V3 Mock, 也是一个简单的非对称签名验签Demo
 
+# 环境
 用了Springboot3，所以需要Java17+
 
 ## Mock接口
