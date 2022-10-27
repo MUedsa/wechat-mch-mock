@@ -4,7 +4,9 @@
 用了Springboot3，所以需要Java17+
 
 ## Mock接口
-- /v3/
+- /v3/certificates
+
+暂时只有证书接口Orz
 
 ## 说明
 
