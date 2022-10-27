@@ -5,6 +5,7 @@ import com.wechat.pay.contrib.apache.httpclient.auth.PrivateKeySigner;
 import com.wechat.pay.contrib.apache.httpclient.auth.Verifier;
 import com.wechat.pay.contrib.apache.httpclient.auth.WechatPay2Credentials;
 import com.wechat.pay.contrib.apache.httpclient.auth.WechatPay2Validator;
+import com.wechat.pay.contrib.apache.httpclient.cert.CertificatesManager;
 import com.wechat.pay.contrib.apache.httpclient.exception.HttpCodeException;
 import com.wechat.pay.contrib.apache.httpclient.exception.NotFoundException;
 import com.wechat.pay.contrib.apache.httpclient.util.PemUtil;
@@ -81,7 +82,6 @@ public class Main {
     }
 
     private static void initCertificatesManager() throws GeneralSecurityException, IOException, HttpCodeException, IllegalArgumentException {
-        CertificatesManager.updateCertDownloadPath(API_HOST + "/v3/certificates");
         CertificatesManager certificatesManager = CertificatesManager.getInstance();
         certificatesManager.putMerchant(MCH_ID, new WechatPay2Credentials(MCH_ID,
                 new PrivateKeySigner(MCH_SERIAL_NUMBER, MCH_PRIVATE_KEY)), MCH_API_V3_KEY.getBytes(StandardCharsets.UTF_8));
