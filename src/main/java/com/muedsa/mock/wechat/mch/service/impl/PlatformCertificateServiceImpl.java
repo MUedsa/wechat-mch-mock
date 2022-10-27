@@ -44,7 +44,7 @@ public class PlatformCertificateServiceImpl implements PlatformCertificateServic
             try {
                 encryptCert.setCiphertext(AesUtil.encryptToBase64(apiV3Key, associatedData, nonce, PemUtil.toPEM(certificate)));
             } catch (BadPaddingException | IllegalBlockSizeException | CertificateEncodingException e) {
-                throw new IllegalArgumentException(e);
+                throw new IllegalStateException(e);
             }
             certInfo.setEncryptCertificate(encryptCert);
             list.add(certInfo);

@@ -30,7 +30,7 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
     }
 
     private void resolveWechatMchException(WechatMchException e, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        ErrorResponse errorResponse = GlobalExceptionHandler.buildErrorResponse(e);
+        ErrorResponse errorResponse = GlobalExceptionHandler.buildErrorResponse(e.getCode(), e.getMessage());
         response.setStatus(e.getHttpStatus().value());
         response.setHeader("Content-Type", "application/json;charset=UTF-8");
         PrintWriter writer = response.getWriter();

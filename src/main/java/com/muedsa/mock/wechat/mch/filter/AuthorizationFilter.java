@@ -2,7 +2,7 @@ package com.muedsa.mock.wechat.mch.filter;
 
 import com.muedsa.mock.wechat.mch.cert.MerchantManager;
 import com.muedsa.mock.wechat.mch.container.AuthorizationContainer;
-import com.muedsa.mock.wechat.mch.container.ErrorContainer;
+import com.muedsa.mock.wechat.mch.container.ErrorCodeContainer;
 import com.muedsa.mock.wechat.mch.exception.WechatMchException;
 import com.muedsa.mock.wechat.mch.util.AuthorizationUtil;
 import com.muedsa.mock.wechat.mch.util.ValidateUtil;
@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.http.HttpStatus;
 import org.springframework.util.Base64Utils;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
@@ -32,36 +33,40 @@ import java.util.Map;
 @Slf4j
 public class AuthorizationFilter extends OncePerRequestFilter {
 
+    public static final String MESSAGE_SIGN_ERROR = "错误的签名，验签失败";
+    public static final String MESSAGE_SIGN_FORMAT_ERROR = "Http头Authorization值格式错误，请参考《微信支付商户REST API签名规则》";
+    public static final String MESSAGE_SIGN_INFO_ERROR = "签名信息错误，验签失败";
+    public static final HttpStatus HTTP_STATUS_SING_ERROR = HttpStatus.UNAUTHORIZED;
+
     private final MerchantManager merchantManager;
 
     public AuthorizationFilter(MerchantManager merchantManager) {
         this.merchantManager = merchantManager;
     }
 
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authorization = request.getHeader(AuthorizationContainer.HTTP_HEAD_KEY);
-        ValidateUtil.state(StringUtils.hasText(authorization), ErrorContainer.CODE_SIGN_ERROR,
-                ErrorContainer.MESSAGE_SIGN_FORMAT_ERROR, ErrorContainer.HTTP_STATUS_SING_ERROR);
+        ValidateUtil.state(StringUtils.hasText(authorization), ErrorCodeContainer.SIGN_ERROR,
+                MESSAGE_SIGN_FORMAT_ERROR, HTTP_STATUS_SING_ERROR);
         Map<String, String> paramMap = AuthorizationUtil.resolveAuthorization(authorization,
                 AuthorizationContainer.SUCCESS_FLAG);
         ValidateUtil.state(AuthorizationContainer.SUCCESS_FLAG.equals(paramMap.get(AuthorizationContainer.SUCCESS_FLAG)),
-                ErrorContainer.CODE_SIGN_ERROR, ErrorContainer.MESSAGE_SIGN_FORMAT_ERROR, ErrorContainer.HTTP_STATUS_SING_ERROR);
+                ErrorCodeContainer.SIGN_ERROR, MESSAGE_SIGN_FORMAT_ERROR, HTTP_STATUS_SING_ERROR);
         String mchId = paramMap.get(AuthorizationContainer.FIELD_MCH_ID);
         String serialNo = paramMap.get(AuthorizationContainer.FIELD_SERIAL_NO);
         String nonceStr = paramMap.get(AuthorizationContainer.FIELD_NONCE_STR);
         String timestampStr = paramMap.get(AuthorizationContainer.FIELD_TIMESTAMP);
         String signature = paramMap.get(AuthorizationContainer.FIELD_SIGNATURE);
-        ValidateUtil.hasLength(mchId, ErrorContainer.CODE_SIGN_ERROR, ErrorContainer.MESSAGE_SIGN_ERROR, ErrorContainer.HTTP_STATUS_SING_ERROR);
-        ValidateUtil.hasLength(serialNo, ErrorContainer.CODE_SIGN_ERROR, ErrorContainer.MESSAGE_SIGN_ERROR, ErrorContainer.HTTP_STATUS_SING_ERROR);
-        ValidateUtil.hasLength(nonceStr, ErrorContainer.CODE_SIGN_ERROR, ErrorContainer.MESSAGE_SIGN_ERROR, ErrorContainer.HTTP_STATUS_SING_ERROR);
-        ValidateUtil.hasLength(timestampStr, ErrorContainer.CODE_SIGN_ERROR, ErrorContainer.MESSAGE_SIGN_ERROR, ErrorContainer.HTTP_STATUS_SING_ERROR);
-        ValidateUtil.hasLength(signature, ErrorContainer.CODE_SIGN_ERROR, ErrorContainer.MESSAGE_SIGN_ERROR, ErrorContainer.HTTP_STATUS_SING_ERROR);
+        ValidateUtil.hasLength(mchId, ErrorCodeContainer.SIGN_ERROR, MESSAGE_SIGN_ERROR, HTTP_STATUS_SING_ERROR);
+        ValidateUtil.hasLength(serialNo, ErrorCodeContainer.SIGN_ERROR, MESSAGE_SIGN_ERROR, HTTP_STATUS_SING_ERROR);
+        ValidateUtil.hasLength(nonceStr, ErrorCodeContainer.SIGN_ERROR, MESSAGE_SIGN_ERROR, HTTP_STATUS_SING_ERROR);
+        ValidateUtil.hasLength(timestampStr, ErrorCodeContainer.SIGN_ERROR, MESSAGE_SIGN_ERROR, HTTP_STATUS_SING_ERROR);
+        ValidateUtil.hasLength(signature, ErrorCodeContainer.SIGN_ERROR, MESSAGE_SIGN_ERROR, HTTP_STATUS_SING_ERROR);
         MerchantManager.Merchant mch = merchantManager.getMch(mchId);
-        ValidateUtil.notNull(mch, ErrorContainer.CODE_SIGN_ERROR, ErrorContainer.MESSAGE_SIGN_INFO_ERROR, ErrorContainer.HTTP_STATUS_SING_ERROR);
+        ValidateUtil.notNull(mch, ErrorCodeContainer.SIGN_ERROR, MESSAGE_SIGN_INFO_ERROR, HTTP_STATUS_SING_ERROR);
         X509Certificate certificate = mch.getCertificate(serialNo);
-        ValidateUtil.notNull(certificate, ErrorContainer.CODE_SIGN_ERROR, ErrorContainer.MESSAGE_SIGN_ERROR, ErrorContainer.HTTP_STATUS_SING_ERROR);
+        ValidateUtil.notNull(certificate, ErrorCodeContainer.SIGN_ERROR, MESSAGE_SIGN_ERROR, HTTP_STATUS_SING_ERROR);
         CachedBodyHttpServletRequest cachedBodyHttpServletRequest;
         if(request instanceof CachedBodyHttpServletRequest) {
             cachedBodyHttpServletRequest = (CachedBodyHttpServletRequest) request;
@@ -75,12 +80,12 @@ public class AuthorizationFilter extends OncePerRequestFilter {
             sign.initVerify(certificate);
             sign.update(buildSignatureMessage(method, url, nonceStr, timestampStr, cachedBodyHttpServletRequest.getCachedBody()));
             boolean success = sign.verify(Base64Utils.decodeFromString(signature));
-            ValidateUtil.state(success, ErrorContainer.CODE_SIGN_ERROR, ErrorContainer.MESSAGE_SIGN_ERROR, ErrorContainer.HTTP_STATUS_SING_ERROR);
+            ValidateUtil.state(success, ErrorCodeContainer.SIGN_ERROR, MESSAGE_SIGN_ERROR, HTTP_STATUS_SING_ERROR);
             cachedBodyHttpServletRequest.setAttribute(AuthorizationContainer.REQUEST_ATTR_MCH, mch);
             MDC.put(AuthorizationContainer.FIELD_MCH_ID, mchId);
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             log.error("Authorization verify fail", e);
-            throw new WechatMchException(ErrorContainer.CODE_SIGN_ERROR, ErrorContainer.MESSAGE_SIGN_ERROR, ErrorContainer.HTTP_STATUS_SING_ERROR);
+            throw new WechatMchException(ErrorCodeContainer.SIGN_ERROR, MESSAGE_SIGN_ERROR, HTTP_STATUS_SING_ERROR, e);
         }
         filterChain.doFilter(cachedBodyHttpServletRequest, response);
     }

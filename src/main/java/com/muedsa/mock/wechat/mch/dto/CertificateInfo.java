@@ -11,10 +11,10 @@ public class CertificateInfo {
     @JsonProperty(value = "serial_no")
     private String serialNo;
     @JsonProperty(value = "effective_time")
-    @JsonFormat(timezone = "GMT+8")
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Date effectiveTime;
     @JsonProperty(value = "expire_time")
-    @JsonFormat(timezone = "GMT+8")
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Date expireTime;
     @JsonProperty(value = "encrypt_certificate")
     private Base64EncryptData encryptCertificate;

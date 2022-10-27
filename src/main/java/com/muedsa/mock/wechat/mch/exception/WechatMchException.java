@@ -11,11 +11,19 @@ public class WechatMchException extends RuntimeException {
     protected HttpStatus httpStatus;
 
     public WechatMchException(String code, String message) {
-        this(code, message, HttpStatus.INTERNAL_SERVER_ERROR);
+        this(code, message, HttpStatus.INTERNAL_SERVER_ERROR, null);
     }
 
     public WechatMchException(String code, String message, HttpStatus httpStatus) {
-        super(message);
+        this(code, message, httpStatus, null);
+    }
+
+    public WechatMchException(String code, String message, Throwable cause) {
+        this(code, message, HttpStatus.INTERNAL_SERVER_ERROR, cause);
+    }
+
+    public WechatMchException(String code, String message, HttpStatus httpStatus, Throwable cause) {
+        super(message, cause);
         this.code = code;
         this.httpStatus = httpStatus;
     }
