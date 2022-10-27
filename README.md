@@ -22,4 +22,4 @@
 
 `com.muedsa.mock.wechat.mch.cert.MerchantManagerImpl`管理商户的相关信息(mchId、apiV3Key、商户上传的证书`mock_client_nnnn_xxxx.cer`)。
 
-`com.muedsa.mock.wechat.mch.cert.PlatformSecretManager`管理服务器生成密钥的证书(发送给商户的证书`mock_server_xxxx.cer`)
+`com.muedsa.mock.wechat.mch.cert.PlatformSecretManager`管理服务器生成密钥和证书(发送给商户的证书`mock_server_xxxx.cer`)
