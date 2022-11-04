@@ -1,5 +1,5 @@
 # wechat-mch-mock
-微信支付API V3 Mock, 也是一个简单API双向认证Demo
+微信支付API V3 Mock, 也是一个简单API单向认证Demo
 
 # 环境
 用了Springboot3，所以需要Java17+
